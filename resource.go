@@ -29,6 +29,8 @@ func init() {
 		"network_interface.0.address",                         // GCE
 		"ipv4_address_private",                                // SoftLayer
 		"networks.0.ip4address",                               // Exoscale
+		"primary_adapter_ipv4",                                // Didata
+		"public_ipv4",                                         // Didata
 	}
 
 	// type.name.0
@@ -155,7 +157,15 @@ func (r Resource) Tags() map[string]string {
 				t[vv] = ""
 			}
 		}
-	}
+        case "ddcloud_server":
+                for k, v := range r.Attributes() {
+                        parts := strings.SplitN(k, ".", 2)
+                        if len(parts) == 2 && parts[0] == "tags" && parts[1] != "#" {
+                                vv := strings.ToLower(v)
+                                t[vv] = ""
+                        }
+                }
+        }
 	return t
 }
 
