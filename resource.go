@@ -157,14 +157,31 @@ func (r Resource) Tags() map[string]string {
 				t[vv] = ""
 			}
 		}
-        case "ddcloud_server":
-                for k, v := range r.Attributes() {
-                        parts := strings.SplitN(k, ".", 2)
-                        if len(parts) == 2 && parts[0] == "tags" && parts[1] != "#" {
-                                vv := strings.ToLower(v)
-                                t[vv] = ""
-                        }
-                }
+	case "ddcloud_server":
+		// there may be a more efficient way to parse this, but tag key and value
+		// are stored as seperate attributes that have to be correlated by ID
+		// so lets just loop over the map twice, getting name first then value
+		for k, v := range r.Attributes() {
+			parts := strings.SplitN(k, ".", 3)
+			if len(parts) == 3 && parts[0] == "tag" && parts[1] != "#" {
+				if parts[2] == "name" {
+					kk := strings.ToLower(parts[1])
+					t[kk] = strings.ToLower(v)
+				}
+			}
+		}
+		for k, v := range r.Attributes() {
+			parts := strings.SplitN(k, ".", 3)
+                        if len(parts) == 3 && parts[0] == "tag" && parts[1] != "#" {
+				if parts[2] == "value" {
+					id := strings.ToLower(parts[1])
+					vv := strings.ToLower(v)
+					kk := t[id]
+					t[kk] = vv
+					delete(t, id)
+				}
+			}
+		}
         }
 	return t
 }
